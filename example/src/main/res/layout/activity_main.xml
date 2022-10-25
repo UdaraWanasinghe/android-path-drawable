@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:context=".PathDrawableActivity">
+
+    <com.aureusapps.android.example.pathdrawable.ColorPickerPropertyButton
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:insetLeft="0dp"
+        android:insetTop="0dp"
+        android:insetRight="0dp"
+        android:insetBottom="0dp"
+        android:padding="16dp"
+        app:iconDrawable="@drawable/ic_baseline_format_color_text_24"
+        app:iconSize="32dp" />
+
+</LinearLayout>
