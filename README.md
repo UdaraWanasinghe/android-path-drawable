@@ -12,7 +12,7 @@ A custom drawable that can modify individual vector path colors at runtime.
     ```
 2. Create `PathDrawable`.
    ```kotlin
-       val pathDrawable = PathDrawable(context, R.drawable.ic_android)
+   val pathDrawable = PathDrawable(context, R.drawable.ic_android)
    ```
 3. Control individual path segment colors.
    ```kotlin
