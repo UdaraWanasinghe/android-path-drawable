@@ -32,7 +32,7 @@ afterEvaluate {
                 // pom file
                 pom {
                     name = PUBLISH_ARTIFACT_ID
-                    description = 'A custom drawable that allows you to paint vector paths separately.'
+                    description = 'A custom drawable that can modify individual vector path colors at runtime.'
                     url = 'https://github.com/UdaraWanasinghe/android-path-drawable'
                     licenses {
                         license {
