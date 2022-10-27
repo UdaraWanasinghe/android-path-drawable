@@ -1,4 +1,4 @@
-package com.aureusapps.android.pathdrawable
+package com.aureusapps.android.pathdrawable.example
 
 import org.junit.Test
 

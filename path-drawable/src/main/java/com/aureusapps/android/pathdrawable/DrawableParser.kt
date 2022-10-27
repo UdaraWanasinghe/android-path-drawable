@@ -4,13 +4,38 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Path
+import android.util.AttributeSet
+import android.util.TypedValue
+import android.util.Xml
 import androidx.annotation.DrawableRes
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.PathParser
 import org.xmlpull.v1.XmlPullParser
 import kotlin.math.roundToInt
 
 @SuppressLint("ResourceType")
 internal object DrawableParser {
+
+    private const val ATTR_WIDTH = "width"
+    private const val ATTR_HEIGHT = "height"
+    private const val ATTR_VIEWPORT_WIDTH = "viewportWidth"
+    private const val ATTR_VIEWPORT_HEIGHT = "viewportHeight"
+    private const val ATTR_PATH_DATA = "pathData"
+    private const val ATTR_FILL_COLOR = "fillColor"
+    private const val ATTR_FILL_ALPHA = "fillAlpha"
+    private const val ATTR_STROKE_COLOR = "strokeColor"
+    private const val ATTR_STROKE_ALPHA = "strokeAlpha"
+    private const val ATTR_STROKE_WIDTH = "strokeWidth"
+
+    private val dimensionMap = mapOf(
+        "px" to TypedValue.COMPLEX_UNIT_PX,
+        "dip" to TypedValue.COMPLEX_UNIT_DIP,
+        "dp" to TypedValue.COMPLEX_UNIT_DIP,
+        "sp" to TypedValue.COMPLEX_UNIT_SP,
+        "pt" to TypedValue.COMPLEX_UNIT_PT,
+        "in" to TypedValue.COMPLEX_UNIT_IN,
+        "mm" to TypedValue.COMPLEX_UNIT_MM
+    )
 
     fun parseVectorDrawable(
         context: Context,
@@ -36,74 +61,53 @@ internal object DrawableParser {
                 }
                 when (xml.name) {
                     "vector" -> {
-                        context.obtainStyledAttributes(
-                            xml,
-                            intArrayOf(
-                                android.R.attr.width,
-                                android.R.attr.height,
-                                android.R.attr.viewportWidth,
-                                android.R.attr.viewportHeight
-                            )
-                        ).apply {
-                            width = getDimension(0, 0f)
-                            height = getDimension(1, 0f)
-                            viewportWidth = getFloat(2, 0f)
-                            viewportHeight = getFloat(3, 0f)
-                            recycle()
-                        }
-
+                        val attr = Xml.asAttributeSet(xml)
+                        width = attr.getDimenAttr(context, ATTR_WIDTH)
+                        height = attr.getDimenAttr(context, ATTR_HEIGHT)
+                        viewportWidth = attr.getFloatAttr(context, ATTR_VIEWPORT_WIDTH)
+                        viewportHeight = attr.getFloatAttr(context, ATTR_VIEWPORT_HEIGHT)
                     }
                     "path" -> {
-                        context.obtainStyledAttributes(
-                            xml,
-                            intArrayOf(
-                                android.R.attr.pathData,
-                                android.R.attr.fillAlpha,
-                                android.R.attr.fillColor,
-                                android.R.attr.strokeAlpha,
-                                android.R.attr.strokeColor,
-                                android.R.attr.strokeWidth
-                            )
-                        ).apply {
-                            // path data
-                            val p = getString(0) ?: throw Exception("Invalid path drawable.")
-                            pathData.add(PathParser.createPathFromPathData(p))
-                            // fill alpha
-                            if (hasValue(1)) {
-                                val a = (getFloat(1, 1f) * 255).roundToInt()
-                                fillAlphas.add(a)
-                            } else {
-                                fillAlphas.add(null)
-                            }
-                            // fill color
-                            if (hasValue(2)) {
-                                val c = getColor(2, Color.BLACK)
-                                fillColors.add(c)
-                            } else {
-                                fillColors.add(null)
-                            }
-                            // stroke alpha
-                            if (hasValue(3)) {
-                                val a = (getFloat(3, 1f) * 255).roundToInt()
-                                strokeAlphas.add(a)
-                            } else {
-                                strokeAlphas.add(null)
-                            }
-                            // stroke color
-                            if (hasValue(4)) {
-                                val c = getColor(4, Color.BLACK)
-                                strokeColors.add(c)
-                            } else {
-                                strokeColors.add(null)
-                            }
-                            // stroke width
-                            if (hasValue(5)) {
-                                val w = getDimension(5, 0f)
-                                strokeWidths.add(w)
-                            } else {
-                                strokeWidths.add(null)
-                            }
-                            recycle()
+                        val attr = Xml.asAttributeSet(xml)
+                        // path data
+                        val p = attr.getAttributeValue(attr.getAttrPos(ATTR_PATH_DATA)) ?: throw Exception("path data is null")
+                        pathData.add(PathParser.createPathFromPathData(p))
+                        // fill alpha
+                        val fillAlpha = attr.getFloatAttr(context, ATTR_FILL_ALPHA)
+                        if (fillAlpha != null) {
+                            val a = (fillAlpha * 255).roundToInt()
+                            fillAlphas.add(a)
+                        } else {
+                            fillAlphas.add(null)
+                        }
+                        // fill color
+                        val fillColor = attr.getColorAttr(context, ATTR_FILL_COLOR)
+                        if (fillColor != null) {
+                            fillColors.add(fillColor)
+                        } else {
+                            fillColors.add(null)
+                        }
+                        // stroke alpha
+                        val strokeAlpha = attr.getFloatAttr(context, ATTR_STROKE_ALPHA)
+                        if (strokeAlpha != null) {
+                            val a = (strokeAlpha * 255).roundToInt()
+                            strokeAlphas.add(a)
+                        } else {
+                            strokeAlphas.add(null)
+                        }
+                        // stroke color
+                        val strokeColor = attr.getColorAttr(context, ATTR_STROKE_COLOR)
+                        if (strokeColor != null) {
+                            strokeColors.add(strokeColor)
+                        } else {
+                            strokeColors.add(null)
+                        }
+                        // stroke width
+                        val strokeWidth = attr.getDimenAttr(context, ATTR_STROKE_WIDTH)
+                        if (strokeWidth != null) {
+                            strokeWidths.add(strokeWidth)
+                        } else {
+                            strokeWidths.add(null)
                         }
                     }
                 }
@@ -125,4 +129,105 @@ internal object DrawableParser {
         )
     }
 
+    private fun AttributeSet.getColorAttr(
+        context: Context,
+        attrName: String,
+        defaultColor: Int = Color.BLACK
+    ): Int? {
+        return try {
+            val attrIndex = getAttrPos(attrName)
+            if (attrIndex < 0) {
+                null
+            } else {
+                val attrValue = getAttributeValue(attrIndex)
+                return when {
+                    attrValue.contains("@") -> {
+                        val colorResId = attrValue.replace("@", "").toInt()
+                        ContextCompat.getColor(context, colorResId)
+                    }
+                    attrValue.contains("?") -> {
+                        val colorAttrId = attrValue.replace("?", "").toInt()
+                        val outValue = TypedValue()
+                        if (context.theme.resolveAttribute(colorAttrId, outValue, true)) {
+                            outValue.data
+                        } else {
+                            defaultColor
+                        }
+                    }
+                    else -> {
+                        getAttributeUnsignedIntValue(attrIndex, defaultColor)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            return defaultColor
+        }
+    }
+
+    private fun AttributeSet.getFloatAttr(context: Context, attrName: String): Float? {
+        val attrIndex = getAttrPos(attrName)
+        return if (attrIndex < 0) {
+            null
+        } else {
+            val attrValue = getAttributeValue(attrIndex)
+            return when {
+                attrValue.startsWith("@") -> {
+                    val floatResId = attrValue.replace("@", "").toInt()
+                    context.resources.getDimension(floatResId)
+                }
+                attrValue.startsWith("?") -> {
+                    val floatAttrId = attrValue.replace("?", "").toInt()
+                    val outValue = TypedValue()
+                    if (context.theme.resolveAttribute(floatAttrId, outValue, true)) {
+                        outValue.float
+                    } else {
+                        null
+                    }
+                }
+                else -> {
+                    getAttributeFloatValue(attrIndex, 0f)
+                }
+            }
+        }
+    }
+
+    private fun AttributeSet.getDimenAttr(context: Context, attrName: String): Float? {
+        val attrIndex = getAttrPos(attrName)
+        if (attrIndex < 0) {
+            return null
+        }
+        val attrValue = getAttributeValue(attrIndex)
+        return when {
+            attrValue.startsWith("@") -> {
+                val dimenResId = attrValue.replace("@", "").toInt()
+                context.resources.getDimension(dimenResId)
+            }
+            attrValue.startsWith("?") -> {
+                val dimenAttrId = attrValue.replace("?", "").toInt()
+                val outValue = TypedValue()
+                if (context.theme.resolveAttribute(dimenAttrId, outValue, true)) {
+                    outValue.getDimension(context.resources.displayMetrics)
+                } else {
+                    null
+                }
+            }
+            else -> {
+                val dimenUnit = dimensionMap.entries.firstOrNull { attrValue.endsWith(it.key) }
+                if (dimenUnit == null) {
+                    return attrValue.toFloat()
+                } else {
+                    return TypedValue.applyDimension(
+                        dimenUnit.value,
+                        attrValue.replace(dimenUnit.key, "").toFloat(),
+                        context.resources.displayMetrics
+                    )
+                }
+            }
+        }
+    }
+
+    private fun AttributeSet.getAttrPos(attrName: String): Int {
+        return (0 until attributeCount)
+            .firstOrNull { i -> getAttributeName(i) == attrName } ?: -1
+    }
 }

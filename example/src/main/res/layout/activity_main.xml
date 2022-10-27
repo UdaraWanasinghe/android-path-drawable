@@ -6,5 +6,9 @@
     android:gravity="center"
     tools:context=".MainActivity">
 
+    <ImageView
+        android:id="@+id/image_view"
+        android:layout_width="64dp"
+        android:layout_height="64dp" />
 
 </LinearLayout>
