@@ -76,18 +76,22 @@ class PathDrawable(
     @Deprecated("Deprecated in Java", ReplaceWith("Nothing to replace"))
     override fun getOpacity(): Int = PixelFormat.TRANSLUCENT
 
-    fun setSegmentFillColor(index: Int, color: Int) {
+    @Suppress("unused")
+    fun setSegmentFillColor(index: Int, color: Int?) {
         while (segmentFillColors.lastIndex < index) {
             segmentFillColors.add(null)
         }
         segmentFillColors[index] = color
+        invalidateSelf()
     }
 
-    fun setSegmentStrokeColor(index: Int, color: Int) {
+    @Suppress("unused")
+    fun setSegmentStrokeColor(index: Int, color: Int?) {
         while (segmentStrokeColors.lastIndex < index) {
             segmentStrokeColors.add(null)
         }
         segmentStrokeColors[index] = color
+        invalidateSelf()
     }
 
 }

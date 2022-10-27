@@ -13,7 +13,6 @@ import androidx.core.graphics.PathParser
 import org.xmlpull.v1.XmlPullParser
 import kotlin.math.roundToInt
 
-@SuppressLint("ResourceType")
 internal object DrawableParser {
 
     private const val ATTR_WIDTH = "width"
@@ -37,6 +36,7 @@ internal object DrawableParser {
         "mm" to TypedValue.COMPLEX_UNIT_MM
     )
 
+    @SuppressLint("ResourceType")
     fun parseVectorDrawable(
         context: Context,
         @DrawableRes drawableResId: Int
